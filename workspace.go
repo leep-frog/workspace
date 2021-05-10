@@ -28,6 +28,10 @@ func (*Workspace) Changed() bool {
 	return false
 }
 
+func (*Workspace) Setup() []string {
+	return nil
+}
+
 func numWorkspaces() (int, error) {
 	return runInt([]string{"wmctrl -d | wc | awk '{ print $1 }'"})
 }
