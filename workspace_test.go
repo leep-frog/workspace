@@ -86,8 +86,8 @@ func TestWorkspace(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"left"},
 				WantExecuteData: &command.ExecuteData{
-					Executable: [][]string{
-						{"wmctrl", "-s", "1"},
+					Executable: []string{
+						"wmctrl -s 1",
 					},
 				},
 			},
@@ -105,8 +105,8 @@ func TestWorkspace(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"left"},
 				WantExecuteData: &command.ExecuteData{
-					Executable: [][]string{
-						{"wmctrl", "-s", "3"},
+					Executable: []string{
+						"wmctrl -s 3",
 					},
 				},
 			},
@@ -124,8 +124,8 @@ func TestWorkspace(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"right"},
 				WantExecuteData: &command.ExecuteData{
-					Executable: [][]string{
-						{"wmctrl", "-s", "2"},
+					Executable: []string{
+						"wmctrl -s 2",
 					},
 				},
 			},
@@ -143,8 +143,8 @@ func TestWorkspace(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"right"},
 				WantExecuteData: &command.ExecuteData{
-					Executable: [][]string{
-						{"wmctrl", "-s", "0"},
+					Executable: []string{
+						"wmctrl -s 0",
 					},
 				},
 			},

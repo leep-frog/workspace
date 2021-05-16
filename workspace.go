@@ -1,7 +1,7 @@
 package workspace
 
 import (
-	"strconv"
+	"fmt"
 
 	"github.com/leep-frog/command"
 )
@@ -53,7 +53,7 @@ func moveWorkspace(offset int, output command.Output, eData *command.ExecuteData
 	for newWS = c + offset; newWS < 0; newWS += n {
 	}
 	newWS = newWS % n
-	eData.Executable = append(eData.Executable, []string{"wmctrl", "-s", strconv.Itoa(newWS)})
+	eData.Executable = append(eData.Executable, fmt.Sprintf("wmctrl -s %d", newWS))
 	return nil
 }
 
