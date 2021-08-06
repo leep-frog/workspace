@@ -157,14 +157,14 @@ func TestWorkspace(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			var gotContents [][]string
 			oldRunInt := runInt
-			runInt = func(contents []string) (int, error) {
+			runInt = func(contents []string) (int, error, int) {
 				gotContents = append(gotContents, contents)
 				if len(test.rir) == 0 {
 					t.Fatalf("ran out of stubbed RunInt responses")
 				}
 				r := test.rir[0]
 				test.rir = test.rir[1:]
-				return r.i, r.err
+				return r.i, r.err, 0
 			}
 			defer func() { runInt = oldRunInt }()
 			test.etc.Node = CLI().Node()
