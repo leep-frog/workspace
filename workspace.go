@@ -6,6 +6,10 @@ import (
 	"github.com/leep-frog/command"
 )
 
+const (
+	workspaceArg = "workspace"
+)
+
 var (
 	runInt = command.RunInt
 )
@@ -65,13 +69,26 @@ func (w *Workspace) moveRight(input *command.Input, output command.Output, data 
 	return moveWorkspace(1, output, eData)
 }
 
+// TODO: in command package: "func SimpleExecutable(f func(data, eData) error)"
+func (w *Workspace) nthWorkspace(input *command.Input, output command.Output, data *command.Data, eData *command.ExecuteData) error {
+	eData.Executable = append(eData.Executable, fmt.Sprintf("wmctrl -s %d", data.Int(workspaceArg)))
+	return nil
+}
+
 func (w *Workspace) Node() *command.Node {
 	return command.BranchNode(
 		map[string]*command.Node{
 			"left":  command.SerialNodes(command.SimpleProcessor(w.moveLeft, nil)),
 			"right": command.SerialNodes(command.SimpleProcessor(w.moveRight, nil)),
 		},
-		nil,
+		command.SerialNodes(
+			// TODO: change ArgOpt to set of options.
+			// TODO: remove "Node" from IntNode, StringNode, FloatNode, BoolNode.
+			command.IntNode(workspaceArg, &command.ArgOpt{
+				Validators: []command.ArgValidator{command.IntNonNegative()},
+			}),
+			command.SimpleProcessor(w.nthWorkspace, nil),
+		),
 		true,
 	)
 }

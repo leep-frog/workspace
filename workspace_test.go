@@ -23,24 +23,24 @@ func TestWorkspace(t *testing.T) {
 		{
 			name: "requires argument",
 			etc: &command.ExecuteTestCase{
-				WantErr:    fmt.Errorf("branching argument required"),
-				WantStderr: []string{"branching argument required"},
+				WantErr:    fmt.Errorf("not enough arguments"),
+				WantStderr: []string{"not enough arguments"},
 			},
 		},
 		{
 			name: "requires valid argument",
 			etc: &command.ExecuteTestCase{
 				Args:       []string{"up"},
-				WantErr:    fmt.Errorf("argument must be one of [left right]"),
-				WantStderr: []string{"argument must be one of [left right]"},
+				WantErr:    fmt.Errorf(`strconv.Atoi: parsing "up": invalid syntax`),
+				WantStderr: []string{`strconv.Atoi: parsing "up": invalid syntax`},
 			},
 		},
 		{
 			name: "requires valid argument",
 			etc: &command.ExecuteTestCase{
 				Args:       []string{"up"},
-				WantErr:    fmt.Errorf("argument must be one of [left right]"),
-				WantStderr: []string{"argument must be one of [left right]"},
+				WantErr:    fmt.Errorf(`strconv.Atoi: parsing "up": invalid syntax`),
+				WantStderr: []string{`strconv.Atoi: parsing "up": invalid syntax`},
 			},
 		},
 		{
@@ -151,6 +151,20 @@ func TestWorkspace(t *testing.T) {
 			wantRuns: [][]string{
 				{"wmctrl -d | wc | awk '{ print $1 }'"},
 				{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`},
+			},
+		},
+		{
+			name: "moves to nth workspace",
+			etc: &command.ExecuteTestCase{
+				Args: []string{"3"},
+				WantData: &command.Data{
+					workspaceArg: command.IntValue(3),
+				},
+				WantExecuteData: &command.ExecuteData{
+					Executable: []string{
+						"wmctrl -s 3",
+					},
+				},
 			},
 		},
 	} {
