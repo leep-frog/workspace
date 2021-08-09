@@ -84,9 +84,7 @@ func (w *Workspace) Node() *command.Node {
 		command.SerialNodes(
 			// TODO: change ArgOpt to set of options.
 			// TODO: remove "Node" from IntNode, StringNode, FloatNode, BoolNode.
-			command.IntNode(workspaceArg, &command.ArgOpt{
-				Validators: []command.ArgValidator{command.IntNonNegative()},
-			}),
+			command.IntNode(workspaceArg, command.IntNonNegative()),
 			command.SimpleProcessor(w.nthWorkspace, nil),
 		),
 		true,
