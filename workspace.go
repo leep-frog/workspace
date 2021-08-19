@@ -1,6 +1,7 @@
 package workspace
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/leep-frog/command"
@@ -18,9 +19,20 @@ func CLI() *Workspace {
 	return &Workspace{}
 }
 
-type Workspace struct{}
+type Workspace struct {
+	Prev    int
+	changed bool
+}
 
-func (*Workspace) Load(jsn string) error {
+func (w *Workspace) Load(jsn string) error {
+	if jsn == "" {
+		w = &Workspace{}
+		return nil
+	}
+
+	if err := json.Unmarshal([]byte(jsn), w); err != nil {
+		return fmt.Errorf("failed to unmarshal json for workspace object: %v", err)
+	}
 	return nil
 }
 
@@ -28,8 +40,8 @@ func (*Workspace) Name() string {
 	return "ws"
 }
 
-func (*Workspace) Changed() bool {
-	return false
+func (w *Workspace) Changed() bool {
+	return w.changed
 }
 
 func (*Workspace) Setup() []string {
@@ -44,7 +56,7 @@ func currentWorkspace() (int, error, int) {
 	return runInt([]string{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`})
 }
 
-func moveWorkspace(offset int, output command.Output, eData *command.ExecuteData) error {
+func (w *Workspace) moveRelative(offset int, output command.Output, eData *command.ExecuteData) error {
 	n, err, _ := numWorkspaces()
 	if err != nil {
 		return output.Stderr("failed to get number of workspaces: %v", err)
@@ -57,22 +69,36 @@ func moveWorkspace(offset int, output command.Output, eData *command.ExecuteData
 	for newWS = c + offset; newWS < 0; newWS += n {
 	}
 	newWS = newWS % n
-	eData.Executable = append(eData.Executable, fmt.Sprintf("wmctrl -s %d", newWS))
+	w.moveTo(newWS, output, eData)
 	return nil
 }
 
-func (w *Workspace) moveLeft(input *command.Input, output command.Output, data *command.Data, eData *command.ExecuteData) error {
-	return moveWorkspace(-1, output, eData)
-}
-
-func (w *Workspace) moveRight(input *command.Input, output command.Output, data *command.Data, eData *command.ExecuteData) error {
-	return moveWorkspace(1, output, eData)
+func (w *Workspace) moveTo(n int, output command.Output, eData *command.ExecuteData) error {
+	c, err, _ := currentWorkspace()
+	if err != nil {
+		return output.Stderr("failed to get current workspace: %v", err)
+	}
+	eData.Executable = append(eData.Executable, fmt.Sprintf("wmctrl -s %d", n))
+	w.Prev = c
+	w.changed = true
+	return nil
 }
 
 // TODO: in command package: "func SimpleExecutable(f func(data, eData) error)"
 func (w *Workspace) nthWorkspace(input *command.Input, output command.Output, data *command.Data, eData *command.ExecuteData) error {
-	eData.Executable = append(eData.Executable, fmt.Sprintf("wmctrl -s %d", data.Int(workspaceArg)))
-	return nil
+	return w.moveTo(data.Int(workspaceArg), output, eData)
+}
+
+func (w *Workspace) moveBack(input *command.Input, output command.Output, data *command.Data, eData *command.ExecuteData) error {
+	return w.moveTo(w.Prev, output, eData)
+}
+
+func (w *Workspace) moveLeft(input *command.Input, output command.Output, data *command.Data, eData *command.ExecuteData) error {
+	return w.moveRelative(-1, output, eData)
+}
+
+func (w *Workspace) moveRight(input *command.Input, output command.Output, data *command.Data, eData *command.ExecuteData) error {
+	return w.moveRelative(1, output, eData)
 }
 
 func (w *Workspace) Node() *command.Node {
@@ -80,6 +106,7 @@ func (w *Workspace) Node() *command.Node {
 		map[string]*command.Node{
 			"left":  command.SerialNodes(command.SimpleProcessor(w.moveLeft, nil)),
 			"right": command.SerialNodes(command.SimpleProcessor(w.moveRight, nil)),
+			"back":  command.SerialNodes(command.SimpleProcessor(w.moveBack, nil)),
 		},
 		command.SerialNodes(
 			// TODO: change ArgOpt to set of options.
