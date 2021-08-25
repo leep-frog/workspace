@@ -200,6 +200,21 @@ func TestWorkspace(t *testing.T) {
 			},
 		},
 		{
+			name: "does nothing if request to move to same workspace",
+			rir: []*runIntResponse{
+				{i: 2},
+			},
+			etc: &command.ExecuteTestCase{
+				Args: []string{"2"},
+				WantData: &command.Data{
+					workspaceArg: command.IntValue(2),
+				},
+			},
+			wantRuns: [][]string{
+				{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`},
+			},
+		},
+		{
 			name: "moves back a workspace",
 			w: &Workspace{
 				Prev: 3,

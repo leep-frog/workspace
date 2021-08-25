@@ -75,6 +75,10 @@ func (w *Workspace) moveRelative(offset int, output command.Output, eData *comma
 
 func (w *Workspace) moveTo(n int, output command.Output, eData *command.ExecuteData) error {
 	c, err, _ := currentWorkspace()
+	// If we're already in the workspace, then just return.
+	if n == c {
+		return nil
+	}
 	if err != nil {
 		return output.Stderr("failed to get current workspace: %v", err)
 	}
