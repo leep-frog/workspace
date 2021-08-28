@@ -46,7 +46,7 @@ func TestWorkspace(t *testing.T) {
 				WantStderr: []string{`strconv.Atoi: parsing "up": invalid syntax`},
 			},
 		},
-		{
+		/*{
 			name: "fails if runInt fails when getting the number of workspaces",
 			rir: []*runIntResponse{
 				{
@@ -237,6 +237,7 @@ func TestWorkspace(t *testing.T) {
 				Prev: 5,
 			},
 		},
+		/* Useful for commenting out tests. */
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			var gotContents [][]string
