@@ -12,7 +12,8 @@ const (
 )
 
 var (
-	runInt = command.RunInt
+	nArg  = command.BashCommand(command.IntType, "numWorkspaces", "wmctrl -d | wc | awk '{ print $1 }'")
+	cwArg = command.BashCommand(command.IntType, "currentWorkspace", `wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`)
 )
 
 func CLI() *Workspace {
@@ -48,39 +49,22 @@ func (*Workspace) Setup() []string {
 	return nil
 }
 
-func numWorkspaces() (int, error, int) {
-	return runInt([]string{"wmctrl -d | wc | awk '{ print $1 }'"})
-}
-
-func currentWorkspace() (int, error, int) {
-	return runInt([]string{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`})
-}
-
-func (w *Workspace) moveRelative(offset int, output command.Output, eData *command.ExecuteData) error {
-	n, err, _ := numWorkspaces()
-	if err != nil {
-		return output.Stderr("failed to get number of workspaces: %v", err)
-	}
-	c, err, _ := currentWorkspace()
-	if err != nil {
-		return output.Stderr("failed to get current workspace: %v", err)
-	}
+func (w *Workspace) moveRelative(offset int, output command.Output, data *command.Data, eData *command.ExecuteData) error {
+	n := nArg.Get(data).Int()
+	c := cwArg.Get(data).Int()
 	var newWS int
 	for newWS = c + offset; newWS < 0; newWS += n {
 	}
 	newWS = newWS % n
-	w.moveTo(newWS, output, eData)
+	w.moveTo(newWS, output, data, eData)
 	return nil
 }
 
-func (w *Workspace) moveTo(n int, output command.Output, eData *command.ExecuteData) error {
-	c, err, _ := currentWorkspace()
+func (w *Workspace) moveTo(n int, output command.Output, data *command.Data, eData *command.ExecuteData) error {
+	c := cwArg.Get(data).Int()
 	// If we're already in the workspace, then just return.
 	if n == c {
 		return nil
-	}
-	if err != nil {
-		return output.Stderr("failed to get current workspace: %v", err)
 	}
 	eData.Executable = append(eData.Executable, fmt.Sprintf("wmctrl -s %d", n))
 	w.Prev = c
@@ -90,19 +74,19 @@ func (w *Workspace) moveTo(n int, output command.Output, eData *command.ExecuteD
 
 // TODO: in command package: "func SimpleExecutable(f func(data, eData) error)"
 func (w *Workspace) nthWorkspace(input *command.Input, output command.Output, data *command.Data, eData *command.ExecuteData) error {
-	return w.moveTo(data.Int(workspaceArg), output, eData)
+	return w.moveTo(data.Int(workspaceArg), output, data, eData)
 }
 
 func (w *Workspace) moveBack(input *command.Input, output command.Output, data *command.Data, eData *command.ExecuteData) error {
-	return w.moveTo(w.Prev, output, eData)
+	return w.moveTo(w.Prev, output, data, eData)
 }
 
 func (w *Workspace) moveLeft(input *command.Input, output command.Output, data *command.Data, eData *command.ExecuteData) error {
-	return w.moveRelative(-1, output, eData)
+	return w.moveRelative(-1, output, data, eData)
 }
 
 func (w *Workspace) moveRight(input *command.Input, output command.Output, data *command.Data, eData *command.ExecuteData) error {
-	return w.moveRelative(1, output, eData)
+	return w.moveRelative(1, output, data, eData)
 }
 
 func (w *Workspace) Node() *command.Node {

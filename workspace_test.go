@@ -240,7 +240,8 @@ func TestWorkspace(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			var gotContents [][]string
-			oldRunInt := runInt
+			// TODO: add a way to test this in command package.
+			/*oldRunInt := runInt
 			runInt = func(contents []string) (int, error, int) {
 				gotContents = append(gotContents, contents)
 				if len(test.rir) == 0 {
@@ -250,7 +251,7 @@ func TestWorkspace(t *testing.T) {
 				test.rir = test.rir[1:]
 				return r.i, r.err, 0
 			}
-			defer func() { runInt = oldRunInt }()
+			defer func() { runInt = oldRunInt }()*/
 			w := test.w
 			if w == nil {
 				w = CLI()
