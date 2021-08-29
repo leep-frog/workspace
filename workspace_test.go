@@ -26,8 +26,8 @@ func errRun(s string) *command.FakeRun {
 }
 
 func TestWorkspace(t *testing.T) {
-	numW := []string{fmt.Sprintf("wmctrl -d | wc | awk '{ print $1 }'")}
-	cw := []string{fmt.Sprintf(`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`)}
+	numW := []string{"set -e", "set -o pipefail", fmt.Sprintf("wmctrl -d | wc | awk '{ print $1 }'")}
+	cw := []string{"set -e", "set -o pipefail", fmt.Sprintf(`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`)}
 
 	for _, test := range []struct {
 		name string

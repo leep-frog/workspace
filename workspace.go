@@ -93,7 +93,6 @@ func (w *Workspace) moveRight(input *command.Input, output command.Output, data 
 }
 
 func (w *Workspace) Node() *command.Node {
-	fmt.Println(nArg)
 	return command.BranchNode(
 		map[string]*command.Node{
 			"left":  command.SerialNodes(nArg, cwArg, command.SimpleProcessor(w.moveLeft, nil)),
