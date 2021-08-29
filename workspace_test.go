@@ -33,7 +33,6 @@ func TestWorkspace(t *testing.T) {
 		name string
 		w    *Workspace
 		etc  *command.ExecuteTestCase
-		rrs  []*command.FakeRun
 		want *Workspace
 	}{
 		{
@@ -45,8 +44,8 @@ func TestWorkspace(t *testing.T) {
 				WantData: &command.Data{
 					"currentWorkspace": command.IntValue(1),
 				},
+				RunResponses: []*command.FakeRun{nRun(1)},
 			},
-			rrs: []*command.FakeRun{nRun(1)},
 		},
 		{
 			name: "requires valid argument",
@@ -58,8 +57,8 @@ func TestWorkspace(t *testing.T) {
 				WantData: &command.Data{
 					"currentWorkspace": command.IntValue(2),
 				},
+				RunResponses: []*command.FakeRun{nRun(2)},
 			},
-			rrs: []*command.FakeRun{nRun(2)},
 		},
 		{
 			name: "requires valid argument",
@@ -71,13 +70,13 @@ func TestWorkspace(t *testing.T) {
 				WantData: &command.Data{
 					"currentWorkspace": command.IntValue(3),
 				},
+				RunResponses: []*command.FakeRun{nRun(3)},
 			},
-			rrs: []*command.FakeRun{nRun(3)},
 		},
 		{
 			name: "fails if runInt fails when getting the number of workspaces",
-			rrs:  []*command.FakeRun{errRun("unlimited workspaces")},
 			etc: &command.ExecuteTestCase{
+				RunResponses:    []*command.FakeRun{errRun("unlimited workspaces")},
 				Args:            []string{"left"},
 				WantErr:         fmt.Errorf("failed to execute bash command: unlimited workspaces"),
 				WantStderr:      []string{"failed to execute bash command: unlimited workspaces"},
@@ -94,14 +93,14 @@ func TestWorkspace(t *testing.T) {
 				WantData: &command.Data{
 					"numWorkspaces": command.IntValue(1),
 				},
+				RunResponses: []*command.FakeRun{nRun(1), errRun("unknown workspace")},
 			},
-			rrs: []*command.FakeRun{nRun(1), errRun("unknown workspace")},
 		},
 		{
 			name: "moves left",
-			rrs:  []*command.FakeRun{nRun(4), nRun(2)},
 			etc: &command.ExecuteTestCase{
-				Args: []string{"left"},
+				RunResponses: []*command.FakeRun{nRun(4), nRun(2)},
+				Args:         []string{"left"},
 				WantExecuteData: &command.ExecuteData{
 					Executable: []string{
 						"wmctrl -s 1",
@@ -119,9 +118,9 @@ func TestWorkspace(t *testing.T) {
 		},
 		{
 			name: "moves left from 0 to top",
-			rrs:  []*command.FakeRun{nRun(4), nRun(0)},
 			etc: &command.ExecuteTestCase{
-				Args: []string{"left"},
+				RunResponses: []*command.FakeRun{nRun(4), nRun(0)},
+				Args:         []string{"left"},
 				WantExecuteData: &command.ExecuteData{
 					Executable: []string{
 						"wmctrl -s 3",
@@ -139,9 +138,9 @@ func TestWorkspace(t *testing.T) {
 		},
 		{
 			name: "moves right",
-			rrs:  []*command.FakeRun{nRun(4), nRun(1)},
 			etc: &command.ExecuteTestCase{
-				Args: []string{"right"},
+				RunResponses: []*command.FakeRun{nRun(4), nRun(1)},
+				Args:         []string{"right"},
 				WantExecuteData: &command.ExecuteData{
 					Executable: []string{
 						"wmctrl -s 2",
@@ -159,9 +158,9 @@ func TestWorkspace(t *testing.T) {
 		},
 		{
 			name: "moves right from last workspace",
-			rrs:  []*command.FakeRun{nRun(4), nRun(3)},
 			etc: &command.ExecuteTestCase{
-				Args: []string{"right"},
+				RunResponses: []*command.FakeRun{nRun(4), nRun(3)},
+				Args:         []string{"right"},
 				WantExecuteData: &command.ExecuteData{
 					Executable: []string{
 						"wmctrl -s 0",
@@ -179,9 +178,9 @@ func TestWorkspace(t *testing.T) {
 		},
 		{
 			name: "moves to nth workspace",
-			rrs:  []*command.FakeRun{nRun(5)},
 			etc: &command.ExecuteTestCase{
-				Args: []string{"3"},
+				RunResponses: []*command.FakeRun{nRun(5)},
+				Args:         []string{"3"},
 				WantData: &command.Data{
 					workspaceArg:       command.IntValue(3),
 					"currentWorkspace": command.IntValue(5),
@@ -199,9 +198,9 @@ func TestWorkspace(t *testing.T) {
 		},
 		{
 			name: "does nothing if request to move to same workspace",
-			rrs:  []*command.FakeRun{nRun(2)},
 			etc: &command.ExecuteTestCase{
-				Args: []string{"2"},
+				RunResponses: []*command.FakeRun{nRun(2)},
+				Args:         []string{"2"},
 				WantData: &command.Data{
 					workspaceArg:       command.IntValue(2),
 					"currentWorkspace": command.IntValue(2),
@@ -214,9 +213,9 @@ func TestWorkspace(t *testing.T) {
 			w: &Workspace{
 				Prev: 3,
 			},
-			rrs: []*command.FakeRun{nRun(5)},
 			etc: &command.ExecuteTestCase{
-				Args: []string{"back"},
+				RunResponses: []*command.FakeRun{nRun(5)},
+				Args:         []string{"back"},
 				WantExecuteData: &command.ExecuteData{
 					Executable: []string{
 						"wmctrl -s 3",
@@ -234,37 +233,18 @@ func TestWorkspace(t *testing.T) {
 		/* Useful for commenting out tests. */
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			//var gotContents [][]string
-			// TODO: add a way to test this in command package.
-			/*oldRunInt := runInt
-			runInt = func(contents []string) (int, error, int) {
-				gotContents = append(gotContents, contents)
-				if len(test.rir) == 0 {
-					t.Fatalf("ran out of stubbed RunInt responses")
-				}
-				r := test.rir[0]
-				test.rir = test.rir[1:]
-				return r.i, r.err, 0
-			}
-			defer func() { runInt = oldRunInt }()*/
 			w := test.w
 			if w == nil {
 				w = CLI()
 			}
 			test.etc.Node = w.Node()
-			command.ExecuteTest(t, test.etc, &command.ExecuteTestOptions{
-				RunResponses: test.rrs,
-			})
+			command.ExecuteTest(t, test.etc)
 
 			want := test.want
 			if want == nil {
 				want = &Workspace{}
 			}
 			command.ChangeTest(t, test.want, w, cmpopts.IgnoreUnexported(Workspace{}))
-
-			/*if diff := cmp.Diff(test.wantRuns, gotContents); diff != "" {
-				t.Errorf("Unexpected RunInt contents provided (-want, +got):\n%s", diff)
-			}*/
 		})
 	}
 }
