@@ -12,8 +12,8 @@ const (
 )
 
 var (
-	nArg  = command.BashCommand(command.IntType, "numWorkspaces", "wmctrl -d | wc | awk '{ print $1 }'")
-	cwArg = command.BashCommand(command.IntType, "currentWorkspace", `wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`)
+	nArg  = command.BashCommand(command.IntType, "numWorkspaces", []string{"wmctrl -d | wc | awk '{ print $1 }'"})
+	cwArg = command.BashCommand(command.IntType, "currentWorkspace", []string{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`})
 )
 
 func CLI() *Workspace {
