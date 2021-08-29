@@ -54,7 +54,7 @@ func (w *Workspace) moveRelative(offset int, output command.Output, data *comman
 	c := cwArg.Get(data).Int()
 	// TODO: allow validators in bash nodes.
 	if n <= 0 {
-		return fmt.Errorf("couldn't get number of workspaces")
+		return output.Stderr("couldn't get number of workspaces")
 	}
 	var newWS int
 	for newWS = c + offset; newWS < 0; newWS += n {
