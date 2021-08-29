@@ -52,7 +52,6 @@ func (*Workspace) Setup() []string {
 func (w *Workspace) moveRelative(offset int, output command.Output, data *command.Data, eData *command.ExecuteData) error {
 	n := nArg.Get(data).Int()
 	c := cwArg.Get(data).Int()
-	// TODO: allow validators in bash nodes.
 	if n <= 0 {
 		return output.Stderr("couldn't get number of workspaces")
 	}
@@ -96,13 +95,12 @@ func (w *Workspace) moveRight(input *command.Input, output command.Output, data 
 func (w *Workspace) Node() *command.Node {
 	return command.BranchNode(
 		map[string]*command.Node{
-			"left":  command.SerialNodes(command.SimpleProcessor(w.moveLeft, nil)),
-			"right": command.SerialNodes(command.SimpleProcessor(w.moveRight, nil)),
-			"back":  command.SerialNodes(command.SimpleProcessor(w.moveBack, nil)),
+			"left":  command.SerialNodes(nArg, cwArg, command.SimpleProcessor(w.moveLeft, nil)),
+			"right": command.SerialNodes(nArg, cwArg, command.SimpleProcessor(w.moveRight, nil)),
+			"back":  command.SerialNodes(cwArg, command.SimpleProcessor(w.moveBack, nil)),
 		},
 		command.SerialNodes(
-			// TODO: change ArgOpt to set of options.
-			// TODO: remove "Node" from IntNode, StringNode, FloatNode, BoolNode.
+			cwArg,
 			command.IntNode(workspaceArg, command.IntNonNegative()),
 			command.SimpleProcessor(w.nthWorkspace, nil),
 		),

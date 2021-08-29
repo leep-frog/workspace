@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/leep-frog/command"
 )
@@ -14,79 +13,93 @@ type runIntResponse struct {
 	err error
 }
 
+func nRun(n int) *command.FakeRun {
+	return &command.FakeRun{
+		Stdout: []string{fmt.Sprintf("%d", n)},
+	}
+}
+
+func errRun(s string) *command.FakeRun {
+	return &command.FakeRun{
+		Err: fmt.Errorf("%s", s),
+	}
+}
+
 func TestWorkspace(t *testing.T) {
+	numW := []string{fmt.Sprintf("wmctrl -d | wc | awk '{ print $1 }'")}
+	cw := []string{fmt.Sprintf(`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`)}
+
 	for _, test := range []struct {
-		name     string
-		w        *Workspace
-		etc      *command.ExecuteTestCase
-		rir      []*runIntResponse
-		wantRuns [][]string
-		want     *Workspace
+		name string
+		w    *Workspace
+		etc  *command.ExecuteTestCase
+		rrs  []*command.FakeRun
+		want *Workspace
 	}{
 		{
 			name: "requires argument",
 			etc: &command.ExecuteTestCase{
-				WantErr:    fmt.Errorf("not enough arguments"),
-				WantStderr: []string{"not enough arguments"},
-			},
-		},
-		{
-			name: "requires valid argument",
-			etc: &command.ExecuteTestCase{
-				Args:       []string{"up"},
-				WantErr:    fmt.Errorf(`strconv.Atoi: parsing "up": invalid syntax`),
-				WantStderr: []string{`strconv.Atoi: parsing "up": invalid syntax`},
-			},
-		},
-		{
-			name: "requires valid argument",
-			etc: &command.ExecuteTestCase{
-				Args:       []string{"up"},
-				WantErr:    fmt.Errorf(`strconv.Atoi: parsing "up": invalid syntax`),
-				WantStderr: []string{`strconv.Atoi: parsing "up": invalid syntax`},
-			},
-		},
-		/*{
-			name: "fails if runInt fails when getting the number of workspaces",
-			rir: []*runIntResponse{
-				{
-					err: fmt.Errorf("unlimited workspaces"),
+				WantErr:         fmt.Errorf("not enough arguments"),
+				WantStderr:      []string{"not enough arguments"},
+				WantRunContents: [][]string{cw},
+				WantData: &command.Data{
+					"currentWorkspace": command.IntValue(1),
 				},
 			},
+			rrs: []*command.FakeRun{nRun(1)},
+		},
+		{
+			name: "requires valid argument",
 			etc: &command.ExecuteTestCase{
-				Args:       []string{"left"},
-				WantErr:    fmt.Errorf("failed to get number of workspaces: unlimited workspaces"),
-				WantStderr: []string{"failed to get number of workspaces: unlimited workspaces"},
+				Args:            []string{"up"},
+				WantErr:         fmt.Errorf(`strconv.Atoi: parsing "up": invalid syntax`),
+				WantStderr:      []string{`strconv.Atoi: parsing "up": invalid syntax`},
+				WantRunContents: [][]string{cw},
+				WantData: &command.Data{
+					"currentWorkspace": command.IntValue(2),
+				},
 			},
-			wantRuns: [][]string{
-				{"wmctrl -d | wc | awk '{ print $1 }'"},
+			rrs: []*command.FakeRun{nRun(2)},
+		},
+		{
+			name: "requires valid argument",
+			etc: &command.ExecuteTestCase{
+				Args:            []string{"up"},
+				WantErr:         fmt.Errorf(`strconv.Atoi: parsing "up": invalid syntax`),
+				WantStderr:      []string{`strconv.Atoi: parsing "up": invalid syntax`},
+				WantRunContents: [][]string{cw},
+				WantData: &command.Data{
+					"currentWorkspace": command.IntValue(3),
+				},
+			},
+			rrs: []*command.FakeRun{nRun(3)},
+		},
+		{
+			name: "fails if runInt fails when getting the number of workspaces",
+			rrs:  []*command.FakeRun{errRun("unlimited workspaces")},
+			etc: &command.ExecuteTestCase{
+				Args:            []string{"left"},
+				WantErr:         fmt.Errorf("failed to execute bash command: unlimited workspaces"),
+				WantStderr:      []string{"failed to execute bash command: unlimited workspaces"},
+				WantRunContents: [][]string{numW},
 			},
 		},
 		{
 			name: "fails if runInt fails when getting the current workspace",
-			rir: []*runIntResponse{
-				{},
-				{
-					err: fmt.Errorf("unknown workspace"),
+			etc: &command.ExecuteTestCase{
+				Args:            []string{"left"},
+				WantErr:         fmt.Errorf("failed to execute bash command: unknown workspace"),
+				WantStderr:      []string{"failed to execute bash command: unknown workspace"},
+				WantRunContents: [][]string{numW, cw},
+				WantData: &command.Data{
+					"numWorkspaces": command.IntValue(1),
 				},
 			},
-			etc: &command.ExecuteTestCase{
-				Args:       []string{"left"},
-				WantErr:    fmt.Errorf("failed to get current workspace: unknown workspace"),
-				WantStderr: []string{"failed to get current workspace: unknown workspace"},
-			},
-			wantRuns: [][]string{
-				{"wmctrl -d | wc | awk '{ print $1 }'"},
-				{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`},
-			},
+			rrs: []*command.FakeRun{nRun(1), errRun("unknown workspace")},
 		},
 		{
 			name: "moves left",
-			rir: []*runIntResponse{
-				{i: 4},
-				{i: 2},
-				{i: 2},
-			},
+			rrs:  []*command.FakeRun{nRun(4), nRun(2)},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"left"},
 				WantExecuteData: &command.ExecuteData{
@@ -94,11 +107,11 @@ func TestWorkspace(t *testing.T) {
 						"wmctrl -s 1",
 					},
 				},
-			},
-			wantRuns: [][]string{
-				{"wmctrl -d | wc | awk '{ print $1 }'"},
-				{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`},
-				{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`},
+				WantRunContents: [][]string{numW, cw},
+				WantData: &command.Data{
+					"numWorkspaces":    command.IntValue(4),
+					"currentWorkspace": command.IntValue(2),
+				},
 			},
 			want: &Workspace{
 				Prev: 2,
@@ -106,11 +119,7 @@ func TestWorkspace(t *testing.T) {
 		},
 		{
 			name: "moves left from 0 to top",
-			rir: []*runIntResponse{
-				{i: 4},
-				{i: 0},
-				{i: 0},
-			},
+			rrs:  []*command.FakeRun{nRun(4), nRun(0)},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"left"},
 				WantExecuteData: &command.ExecuteData{
@@ -118,11 +127,11 @@ func TestWorkspace(t *testing.T) {
 						"wmctrl -s 3",
 					},
 				},
-			},
-			wantRuns: [][]string{
-				{"wmctrl -d | wc | awk '{ print $1 }'"},
-				{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`},
-				{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`},
+				WantRunContents: [][]string{numW, cw},
+				WantData: &command.Data{
+					"numWorkspaces":    command.IntValue(4),
+					"currentWorkspace": command.IntValue(0),
+				},
 			},
 			want: &Workspace{
 				Prev: 0,
@@ -130,11 +139,7 @@ func TestWorkspace(t *testing.T) {
 		},
 		{
 			name: "moves right",
-			rir: []*runIntResponse{
-				{i: 4},
-				{i: 1},
-				{i: 1},
-			},
+			rrs:  []*command.FakeRun{nRun(4), nRun(1)},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"right"},
 				WantExecuteData: &command.ExecuteData{
@@ -142,11 +147,11 @@ func TestWorkspace(t *testing.T) {
 						"wmctrl -s 2",
 					},
 				},
-			},
-			wantRuns: [][]string{
-				{"wmctrl -d | wc | awk '{ print $1 }'"},
-				{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`},
-				{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`},
+				WantRunContents: [][]string{numW, cw},
+				WantData: &command.Data{
+					"numWorkspaces":    command.IntValue(4),
+					"currentWorkspace": command.IntValue(1),
+				},
 			},
 			want: &Workspace{
 				Prev: 1,
@@ -154,11 +159,7 @@ func TestWorkspace(t *testing.T) {
 		},
 		{
 			name: "moves right from last workspace",
-			rir: []*runIntResponse{
-				{i: 4},
-				{i: 3},
-				{i: 3},
-			},
+			rrs:  []*command.FakeRun{nRun(4), nRun(3)},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"right"},
 				WantExecuteData: &command.ExecuteData{
@@ -166,11 +167,11 @@ func TestWorkspace(t *testing.T) {
 						"wmctrl -s 0",
 					},
 				},
-			},
-			wantRuns: [][]string{
-				{"wmctrl -d | wc | awk '{ print $1 }'"},
-				{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`},
-				{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`},
+				WantRunContents: [][]string{numW, cw},
+				WantData: &command.Data{
+					"numWorkspaces":    command.IntValue(4),
+					"currentWorkspace": command.IntValue(3),
+				},
 			},
 			want: &Workspace{
 				Prev: 3,
@@ -178,22 +179,19 @@ func TestWorkspace(t *testing.T) {
 		},
 		{
 			name: "moves to nth workspace",
-			rir: []*runIntResponse{
-				{i: 5},
-			},
+			rrs:  []*command.FakeRun{nRun(5)},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"3"},
 				WantData: &command.Data{
-					workspaceArg: command.IntValue(3),
+					workspaceArg:       command.IntValue(3),
+					"currentWorkspace": command.IntValue(5),
 				},
 				WantExecuteData: &command.ExecuteData{
 					Executable: []string{
 						"wmctrl -s 3",
 					},
 				},
-			},
-			wantRuns: [][]string{
-				{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`},
+				WantRunContents: [][]string{cw},
 			},
 			want: &Workspace{
 				Prev: 5,
@@ -201,17 +199,14 @@ func TestWorkspace(t *testing.T) {
 		},
 		{
 			name: "does nothing if request to move to same workspace",
-			rir: []*runIntResponse{
-				{i: 2},
-			},
+			rrs:  []*command.FakeRun{nRun(2)},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"2"},
 				WantData: &command.Data{
-					workspaceArg: command.IntValue(2),
+					workspaceArg:       command.IntValue(2),
+					"currentWorkspace": command.IntValue(2),
 				},
-			},
-			wantRuns: [][]string{
-				{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`},
+				WantRunContents: [][]string{cw},
 			},
 		},
 		{
@@ -219,9 +214,7 @@ func TestWorkspace(t *testing.T) {
 			w: &Workspace{
 				Prev: 3,
 			},
-			rir: []*runIntResponse{
-				{i: 5},
-			},
+			rrs: []*command.FakeRun{nRun(5)},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"back"},
 				WantExecuteData: &command.ExecuteData{
@@ -229,9 +222,10 @@ func TestWorkspace(t *testing.T) {
 						"wmctrl -s 3",
 					},
 				},
-			},
-			wantRuns: [][]string{
-				{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`},
+				WantRunContents: [][]string{cw},
+				WantData: &command.Data{
+					"currentWorkspace": command.IntValue(5),
+				},
 			},
 			want: &Workspace{
 				Prev: 5,
@@ -240,7 +234,7 @@ func TestWorkspace(t *testing.T) {
 		/* Useful for commenting out tests. */
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			var gotContents [][]string
+			//var gotContents [][]string
 			// TODO: add a way to test this in command package.
 			/*oldRunInt := runInt
 			runInt = func(contents []string) (int, error, int) {
@@ -258,7 +252,9 @@ func TestWorkspace(t *testing.T) {
 				w = CLI()
 			}
 			test.etc.Node = w.Node()
-			command.ExecuteTest(t, test.etc, nil)
+			command.ExecuteTest(t, test.etc, &command.ExecuteTestOptions{
+				RunResponses: test.rrs,
+			})
 
 			want := test.want
 			if want == nil {
@@ -266,9 +262,9 @@ func TestWorkspace(t *testing.T) {
 			}
 			command.ChangeTest(t, test.want, w, cmpopts.IgnoreUnexported(Workspace{}))
 
-			if diff := cmp.Diff(test.wantRuns, gotContents); diff != "" {
+			/*if diff := cmp.Diff(test.wantRuns, gotContents); diff != "" {
 				t.Errorf("Unexpected RunInt contents provided (-want, +got):\n%s", diff)
-			}
+			}*/
 		})
 	}
 }
