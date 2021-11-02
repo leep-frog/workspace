@@ -248,3 +248,24 @@ func TestWorkspace(t *testing.T) {
 		})
 	}
 }
+
+func TestUsage(t *testing.T) {
+	command.UsageTest(t, &command.UsageTestCase{
+		Node: CLI().Node(),
+		WantString: []string{
+			"< WORKSPACE",
+			"",
+			"  back",
+			"",
+			"  left",
+			"",
+			"  right",
+			"",
+			"Arguments:",
+			"  WORKSPACE: Workspace number",
+			"",
+			"Symbols:",
+			command.BranchDesc,
+		},
+	})
+}

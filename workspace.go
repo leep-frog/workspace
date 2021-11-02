@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	workspaceArg = "workspace"
+	workspaceArg = "WORKSPACE"
 )
 
 var (
@@ -101,7 +101,7 @@ func (w *Workspace) Node() *command.Node {
 		},
 		command.SerialNodes(
 			cwArg,
-			command.IntNode(workspaceArg, command.IntNonNegative()),
+			command.IntNode(workspaceArg, "Workspace number", command.IntNonNegative()),
 			command.SimpleProcessor(w.nthWorkspace, nil),
 		),
 		true,
