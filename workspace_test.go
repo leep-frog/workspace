@@ -38,8 +38,8 @@ func TestWorkspace(t *testing.T) {
 		{
 			name: "requires argument",
 			etc: &command.ExecuteTestCase{
-				WantErr:         fmt.Errorf("not enough arguments"),
-				WantStderr:      []string{"not enough arguments"},
+				WantErr:         fmt.Errorf(`Argument "WORKSPACE" requires at least 1 argument, got 0`),
+				WantStderr:      []string{`Argument "WORKSPACE" requires at least 1 argument, got 0`},
 				WantRunContents: [][]string{cw},
 				WantData: &command.Data{
 					"currentWorkspace": command.IntValue(1),
