@@ -42,7 +42,9 @@ func TestWorkspace(t *testing.T) {
 				WantStderr:      []string{`Argument "WORKSPACE" requires at least 1 argument, got 0`},
 				WantRunContents: [][]string{cw},
 				WantData: &command.Data{
-					"currentWorkspace": command.IntValue(1),
+					Values: map[string]*command.Value{
+						"currentWorkspace": command.IntValue(1),
+					},
 				},
 				RunResponses: []*command.FakeRun{nRun(1)},
 			},
@@ -55,7 +57,9 @@ func TestWorkspace(t *testing.T) {
 				WantStderr:      []string{`strconv.Atoi: parsing "up": invalid syntax`},
 				WantRunContents: [][]string{cw},
 				WantData: &command.Data{
-					"currentWorkspace": command.IntValue(2),
+					Values: map[string]*command.Value{
+						"currentWorkspace": command.IntValue(2),
+					},
 				},
 				RunResponses: []*command.FakeRun{nRun(2)},
 			},
@@ -68,7 +72,9 @@ func TestWorkspace(t *testing.T) {
 				WantStderr:      []string{`strconv.Atoi: parsing "up": invalid syntax`},
 				WantRunContents: [][]string{cw},
 				WantData: &command.Data{
-					"currentWorkspace": command.IntValue(3),
+					Values: map[string]*command.Value{
+						"currentWorkspace": command.IntValue(3),
+					},
 				},
 				RunResponses: []*command.FakeRun{nRun(3)},
 			},
@@ -91,7 +97,9 @@ func TestWorkspace(t *testing.T) {
 				WantStderr:      []string{"failed to execute bash command: unknown workspace"},
 				WantRunContents: [][]string{numW, cw},
 				WantData: &command.Data{
-					"numWorkspaces": command.IntValue(1),
+					Values: map[string]*command.Value{
+						"numWorkspaces": command.IntValue(1),
+					},
 				},
 				RunResponses: []*command.FakeRun{nRun(1), errRun("unknown workspace")},
 			},
@@ -108,8 +116,10 @@ func TestWorkspace(t *testing.T) {
 				},
 				WantRunContents: [][]string{numW, cw},
 				WantData: &command.Data{
-					"numWorkspaces":    command.IntValue(4),
-					"currentWorkspace": command.IntValue(2),
+					Values: map[string]*command.Value{
+						"numWorkspaces":    command.IntValue(4),
+						"currentWorkspace": command.IntValue(2),
+					},
 				},
 			},
 			want: &Workspace{
@@ -128,8 +138,10 @@ func TestWorkspace(t *testing.T) {
 				},
 				WantRunContents: [][]string{numW, cw},
 				WantData: &command.Data{
-					"numWorkspaces":    command.IntValue(4),
-					"currentWorkspace": command.IntValue(0),
+					Values: map[string]*command.Value{
+						"numWorkspaces":    command.IntValue(4),
+						"currentWorkspace": command.IntValue(0),
+					},
 				},
 			},
 			want: &Workspace{
@@ -148,8 +160,10 @@ func TestWorkspace(t *testing.T) {
 				},
 				WantRunContents: [][]string{numW, cw},
 				WantData: &command.Data{
-					"numWorkspaces":    command.IntValue(4),
-					"currentWorkspace": command.IntValue(1),
+					Values: map[string]*command.Value{
+						"numWorkspaces":    command.IntValue(4),
+						"currentWorkspace": command.IntValue(1),
+					},
 				},
 			},
 			want: &Workspace{
@@ -168,8 +182,10 @@ func TestWorkspace(t *testing.T) {
 				},
 				WantRunContents: [][]string{numW, cw},
 				WantData: &command.Data{
-					"numWorkspaces":    command.IntValue(4),
-					"currentWorkspace": command.IntValue(3),
+					Values: map[string]*command.Value{
+						"numWorkspaces":    command.IntValue(4),
+						"currentWorkspace": command.IntValue(3),
+					},
 				},
 			},
 			want: &Workspace{
@@ -182,8 +198,10 @@ func TestWorkspace(t *testing.T) {
 				RunResponses: []*command.FakeRun{nRun(5)},
 				Args:         []string{"3"},
 				WantData: &command.Data{
-					workspaceArg:       command.IntValue(3),
-					"currentWorkspace": command.IntValue(5),
+					Values: map[string]*command.Value{
+						workspaceArg:       command.IntValue(3),
+						"currentWorkspace": command.IntValue(5),
+					},
 				},
 				WantExecuteData: &command.ExecuteData{
 					Executable: []string{
@@ -202,8 +220,10 @@ func TestWorkspace(t *testing.T) {
 				RunResponses: []*command.FakeRun{nRun(2)},
 				Args:         []string{"2"},
 				WantData: &command.Data{
-					workspaceArg:       command.IntValue(2),
-					"currentWorkspace": command.IntValue(2),
+					Values: map[string]*command.Value{
+						workspaceArg:       command.IntValue(2),
+						"currentWorkspace": command.IntValue(2),
+					},
 				},
 				WantRunContents: [][]string{cw},
 			},
@@ -223,7 +243,9 @@ func TestWorkspace(t *testing.T) {
 				},
 				WantRunContents: [][]string{cw},
 				WantData: &command.Data{
-					"currentWorkspace": command.IntValue(5),
+					Values: map[string]*command.Value{
+						"currentWorkspace": command.IntValue(5),
+					},
 				},
 			},
 			want: &Workspace{

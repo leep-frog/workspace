@@ -50,8 +50,8 @@ func (*Workspace) Setup() []string {
 }
 
 func (w *Workspace) moveRelative(offset int, output command.Output, data *command.Data, eData *command.ExecuteData) error {
-	n := nArg.Get(data).Int()
-	c := cwArg.Get(data).Int()
+	n := nArg.Get(data).ToInt()
+	c := cwArg.Get(data).ToInt()
 	if n <= 0 {
 		return output.Stderr("couldn't get number of workspaces")
 	}
@@ -64,7 +64,7 @@ func (w *Workspace) moveRelative(offset int, output command.Output, data *comman
 }
 
 func (w *Workspace) moveTo(n int, output command.Output, data *command.Data, eData *command.ExecuteData) error {
-	c := cwArg.Get(data).Int()
+	c := cwArg.Get(data).ToInt()
 	// If we're already in the workspace, then just return.
 	if n == c {
 		return nil
@@ -75,7 +75,6 @@ func (w *Workspace) moveTo(n int, output command.Output, data *command.Data, eDa
 	return nil
 }
 
-// TODO: in command package: "func SimpleExecutable(f func(data, eData) error)"
 func (w *Workspace) nthWorkspace(input *command.Input, output command.Output, data *command.Data, eData *command.ExecuteData) error {
 	return w.moveTo(data.Int(workspaceArg), output, data, eData)
 }
