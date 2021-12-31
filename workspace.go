@@ -49,59 +49,57 @@ func (*Workspace) Setup() []string {
 	return nil
 }
 
-func (w *Workspace) moveRelative(offset int, output command.Output, data *command.Data, eData *command.ExecuteData) error {
+func (w *Workspace) moveRelative(offset int, output command.Output, data *command.Data) ([]string, error) {
 	n := nArg.Get(data).ToInt()
 	c := cwArg.Get(data).ToInt()
 	if n <= 0 {
-		return output.Stderr("couldn't get number of workspaces")
+		return nil, output.Stderr("couldn't get number of workspaces")
 	}
 	var newWS int
 	for newWS = c + offset; newWS < 0; newWS += n {
 	}
 	newWS = newWS % n
-	w.moveTo(newWS, output, data, eData)
-	return nil
+	return w.moveTo(newWS, output, data)
 }
 
-func (w *Workspace) moveTo(n int, output command.Output, data *command.Data, eData *command.ExecuteData) error {
+func (w *Workspace) moveTo(n int, output command.Output, data *command.Data) ([]string, error) {
 	c := cwArg.Get(data).ToInt()
 	// If we're already in the workspace, then just return.
 	if n == c {
-		return nil
+		return nil, nil
 	}
-	eData.Executable = append(eData.Executable, fmt.Sprintf("wmctrl -s %d", n))
 	w.Prev = c
 	w.changed = true
-	return nil
+	return []string{fmt.Sprintf("wmctrl -s %d", n)}, nil
 }
 
-func (w *Workspace) nthWorkspace(input *command.Input, output command.Output, data *command.Data, eData *command.ExecuteData) error {
-	return w.moveTo(data.Int(workspaceArg), output, data, eData)
+func (w *Workspace) nthWorkspace(output command.Output, data *command.Data) ([]string, error) {
+	return w.moveTo(data.Int(workspaceArg), output, data)
 }
 
-func (w *Workspace) moveBack(input *command.Input, output command.Output, data *command.Data, eData *command.ExecuteData) error {
-	return w.moveTo(w.Prev, output, data, eData)
+func (w *Workspace) moveBack(output command.Output, data *command.Data) ([]string, error) {
+	return w.moveTo(w.Prev, output, data)
 }
 
-func (w *Workspace) moveLeft(input *command.Input, output command.Output, data *command.Data, eData *command.ExecuteData) error {
-	return w.moveRelative(-1, output, data, eData)
+func (w *Workspace) moveLeft(output command.Output, data *command.Data) ([]string, error) {
+	return w.moveRelative(-1, output, data)
 }
 
-func (w *Workspace) moveRight(input *command.Input, output command.Output, data *command.Data, eData *command.ExecuteData) error {
-	return w.moveRelative(1, output, data, eData)
+func (w *Workspace) moveRight(output command.Output, data *command.Data) ([]string, error) {
+	return w.moveRelative(1, output, data)
 }
 
 func (w *Workspace) Node() *command.Node {
 	return command.BranchNode(
 		map[string]*command.Node{
-			"left":  command.SerialNodes(nArg, cwArg, command.SimpleProcessor(w.moveLeft, nil)),
-			"right": command.SerialNodes(nArg, cwArg, command.SimpleProcessor(w.moveRight, nil)),
-			"back":  command.SerialNodes(cwArg, command.SimpleProcessor(w.moveBack, nil)),
+			"left":  command.SerialNodes(nArg, cwArg, command.ExecutableNode(w.moveLeft)),
+			"right": command.SerialNodes(nArg, cwArg, command.ExecutableNode(w.moveRight)),
+			"back":  command.SerialNodes(cwArg, command.ExecutableNode(w.moveBack)),
 		},
 		command.SerialNodes(
 			cwArg,
 			command.IntNode(workspaceArg, "Workspace number", command.IntNonNegative()),
-			command.SimpleProcessor(w.nthWorkspace, nil),
+			command.ExecutableNode(w.nthWorkspace),
 		),
 		true,
 	)
