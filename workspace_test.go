@@ -131,14 +131,14 @@ func TestWorkspace(t *testing.T) {
 			},
 		},
 		{
-			name: "left move changes brightness",
+			name: "left move changes brightness with trimmed arguments",
 			w: &Workspace{
 				Brightness: map[int]int{
 					1: 37,
 				},
 			},
 			etc: &command.ExecuteTestCase{
-				RunResponses: []*command.FakeRun{nRun(4), nRun(2), mcRun("DP-1", "DP-7")},
+				RunResponses: []*command.FakeRun{nRun(4), nRun(2), mcRun("  DP-1\t", "DP-7  ", "  \t ")},
 				Args:         []string{"left"},
 				WantExecuteData: &command.ExecuteData{
 					Executable: []string{

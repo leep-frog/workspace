@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/leep-frog/command"
 )
@@ -80,7 +81,9 @@ func (w *Workspace) moveTo(n int, output command.Output, data *command.Data) ([]
 			output.Annotate(err, "Failed to get monitor codes")
 		} else {
 			for _, mc := range mcs.ToStringList() {
-				r = append(r, fmt.Sprintf("xrandr --output %s --brightness %0.2f", mc, float64(b)/100.0))
+				if trimmed := strings.TrimSpace(mc); trimmed != "" {
+					r = append(r, fmt.Sprintf("xrandr --output %s --brightness %0.2f", trimmed, float64(b)/100.0))
+				}
 			}
 		}
 	}
