@@ -17,6 +17,8 @@ const (
 var (
 	nArg  = command.BashCommand(command.IntType, "numWorkspaces", []string{"wmctrl -d | wc | awk '{ print $1 }'"})
 	cwArg = command.BashCommand(command.IntType, "currentWorkspace", []string{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`})
+
+	listMcs = command.BashCommand(command.StringListType, "mcs", []string{`xrandr --query | grep "\bconnected" | awk '{print $1}'`})
 )
 
 func CLI() *Workspace {
@@ -30,11 +32,6 @@ type Workspace struct {
 }
 
 func (w *Workspace) Load(jsn string) error {
-	if jsn == "" {
-		w = &Workspace{}
-		return nil
-	}
-
 	if err := json.Unmarshal([]byte(jsn), w); err != nil {
 		return fmt.Errorf("failed to unmarshal json for workspace object: %v", err)
 	}
@@ -74,7 +71,20 @@ func (w *Workspace) moveTo(n int, output command.Output, data *command.Data) ([]
 	}
 	w.Prev = c
 	w.changed = true
-	return []string{fmt.Sprintf("wmctrl -s %d", n)}, nil
+	r := []string{
+		fmt.Sprintf("wmctrl -s %d", n),
+	}
+	if b, ok := w.Brightness[n]; ok {
+		mcs, err := listMcs.Run(output)
+		if err != nil {
+			output.Annotate(err, "Failed to get monitor codes")
+		} else {
+			for _, mc := range mcs.ToStringList() {
+				r = append(r, fmt.Sprintf("xrandr --output %s --brightness %0.2f", mc, float64(b)/100.0))
+			}
+		}
+	}
+	return r, nil
 }
 
 func (w *Workspace) nthWorkspace(output command.Output, data *command.Data) ([]string, error) {
@@ -111,7 +121,7 @@ func (w *Workspace) Node() *command.Node {
 			"monitors": command.BranchNode(map[string]*command.Node{
 				"list": command.SerialNodes(
 					command.Description("List monitor codes"),
-					command.BashCommand(command.StringListType, "mcs", []string{`xrandr --query | grep "\bconnected" | awk '{print $1}'`}),
+					listMcs,
 					command.ExecutorNode(func(o command.Output, d *command.Data) {
 						codes := d.StringList("mcs")
 						sort.Strings(codes)

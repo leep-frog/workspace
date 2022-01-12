@@ -25,6 +25,12 @@ func errRun(s string) *command.FakeRun {
 	}
 }
 
+func mcRun(mcs ...string) *command.FakeRun {
+	return &command.FakeRun{
+		Stdout: mcs,
+	}
+}
+
 func TestWorkspace(t *testing.T) {
 	numW := []string{"set -e", "set -o pipefail", fmt.Sprintf("wmctrl -d | wc | awk '{ print $1 }'")}
 	cw := []string{"set -e", "set -o pipefail", fmt.Sprintf(`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`)}
@@ -125,6 +131,38 @@ func TestWorkspace(t *testing.T) {
 			},
 		},
 		{
+			name: "left move changes brightness",
+			w: &Workspace{
+				Brightness: map[int]int{
+					1: 37,
+				},
+			},
+			etc: &command.ExecuteTestCase{
+				RunResponses: []*command.FakeRun{nRun(4), nRun(2), mcRun("DP-1", "DP-7")},
+				Args:         []string{"left"},
+				WantExecuteData: &command.ExecuteData{
+					Executable: []string{
+						"wmctrl -s 1",
+						"xrandr --output DP-1 --brightness 0.37",
+						"xrandr --output DP-7 --brightness 0.37",
+					},
+				},
+				WantRunContents: [][]string{numW, cw, lmCmd},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						"numWorkspaces":    command.IntValue(4),
+						"currentWorkspace": command.IntValue(2),
+					},
+				},
+			},
+			want: &Workspace{
+				Prev: 2,
+				Brightness: map[int]int{
+					1: 37,
+				},
+			},
+		},
+		{
 			name: "moves right",
 			etc: &command.ExecuteTestCase{
 				RunResponses: []*command.FakeRun{nRun(4), nRun(1)},
@@ -169,6 +207,38 @@ func TestWorkspace(t *testing.T) {
 			},
 		},
 		{
+			name: "right move changes brightness",
+			w: &Workspace{
+				Brightness: map[int]int{
+					0: 101,
+				},
+			},
+			etc: &command.ExecuteTestCase{
+				RunResponses: []*command.FakeRun{nRun(4), nRun(3), mcRun("DP-1", "DP-7")},
+				Args:         []string{"right"},
+				WantExecuteData: &command.ExecuteData{
+					Executable: []string{
+						"wmctrl -s 0",
+						"xrandr --output DP-1 --brightness 1.01",
+						"xrandr --output DP-7 --brightness 1.01",
+					},
+				},
+				WantRunContents: [][]string{numW, cw, lmCmd},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						"numWorkspaces":    command.IntValue(4),
+						"currentWorkspace": command.IntValue(3),
+					},
+				},
+			},
+			want: &Workspace{
+				Prev: 3,
+				Brightness: map[int]int{
+					0: 101,
+				},
+			},
+		},
+		{
 			name: "moves to nth workspace",
 			etc: &command.ExecuteTestCase{
 				RunResponses: []*command.FakeRun{nRun(5)},
@@ -188,6 +258,38 @@ func TestWorkspace(t *testing.T) {
 			},
 			want: &Workspace{
 				Prev: 5,
+			},
+		},
+		{
+			name: "nth move changes brightness",
+			w: &Workspace{
+				Brightness: map[int]int{
+					3: 21,
+				},
+			},
+			etc: &command.ExecuteTestCase{
+				RunResponses: []*command.FakeRun{nRun(5), mcRun("DP-2", "DP-5")},
+				Args:         []string{"3"},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						workspaceArg:       command.IntValue(3),
+						"currentWorkspace": command.IntValue(5),
+					},
+				},
+				WantExecuteData: &command.ExecuteData{
+					Executable: []string{
+						"wmctrl -s 3",
+						"xrandr --output DP-2 --brightness 0.21",
+						"xrandr --output DP-5 --brightness 0.21",
+					},
+				},
+				WantRunContents: [][]string{cw, lmCmd},
+			},
+			want: &Workspace{
+				Prev: 5,
+				Brightness: map[int]int{
+					3: 21,
+				},
 			},
 		},
 		{
@@ -228,16 +330,42 @@ func TestWorkspace(t *testing.T) {
 				Prev: 5,
 			},
 		},
+		{
+			name: "moves back a workspace changes brightness",
+			w: &Workspace{
+				Prev: 3,
+				Brightness: map[int]int{
+					3: 45,
+				},
+			},
+			etc: &command.ExecuteTestCase{
+				RunResponses: []*command.FakeRun{nRun(5), mcRun("eDP-3")},
+				Args:         []string{"back"},
+				WantExecuteData: &command.ExecuteData{
+					Executable: []string{
+						"wmctrl -s 3",
+						"xrandr --output eDP-3 --brightness 0.45",
+					},
+				},
+				WantRunContents: [][]string{cw, lmCmd},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						"currentWorkspace": command.IntValue(5),
+					},
+				},
+			},
+			want: &Workspace{
+				Prev: 5,
+				Brightness: map[int]int{
+					3: 45,
+				},
+			},
+		},
 		// List monitors
 		{
 			name: "Lists monitors",
 			etc: &command.ExecuteTestCase{
-				RunResponses: []*command.FakeRun{{
-					Stdout: []string{
-						"eDP-1",
-						"DP-1-3",
-					},
-				}},
+				RunResponses:    []*command.FakeRun{mcRun("eDP-1", "DP-1-3")},
 				Args:            []string{"monitors", "list"},
 				WantRunContents: [][]string{lmCmd},
 				WantStdout:      []string{"DP-1-3", "eDP-1"},
