@@ -151,8 +151,8 @@ func (w *Workspace) Node() *command.Node {
 		},
 		command.SerialNodes(
 			command.Description("Move to a specific workspace"),
-			cwArg,
 			wn,
+			cwArg,
 			command.ExecutableNode(w.nthWorkspace),
 		),
 	)

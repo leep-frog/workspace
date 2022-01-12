@@ -43,45 +43,16 @@ func TestWorkspace(t *testing.T) {
 		{
 			name: "requires argument",
 			etc: &command.ExecuteTestCase{
-				WantErr:         fmt.Errorf(`Argument "WORKSPACE" requires at least 1 argument, got 0`),
-				WantStderr:      []string{`Argument "WORKSPACE" requires at least 1 argument, got 0`},
-				WantRunContents: [][]string{cw},
-				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						"currentWorkspace": command.IntValue(1),
-					},
-				},
-				RunResponses: []*command.FakeRun{nRun(1)},
+				WantErr:    fmt.Errorf(`Argument "WORKSPACE" requires at least 1 argument, got 0`),
+				WantStderr: []string{`Argument "WORKSPACE" requires at least 1 argument, got 0`},
 			},
 		},
 		{
 			name: "requires valid argument",
 			etc: &command.ExecuteTestCase{
-				Args:            []string{"up"},
-				WantErr:         fmt.Errorf(`strconv.Atoi: parsing "up": invalid syntax`),
-				WantStderr:      []string{`strconv.Atoi: parsing "up": invalid syntax`},
-				WantRunContents: [][]string{cw},
-				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						"currentWorkspace": command.IntValue(2),
-					},
-				},
-				RunResponses: []*command.FakeRun{nRun(2)},
-			},
-		},
-		{
-			name: "requires valid argument",
-			etc: &command.ExecuteTestCase{
-				Args:            []string{"up"},
-				WantErr:         fmt.Errorf(`strconv.Atoi: parsing "up": invalid syntax`),
-				WantStderr:      []string{`strconv.Atoi: parsing "up": invalid syntax`},
-				WantRunContents: [][]string{cw},
-				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						"currentWorkspace": command.IntValue(3),
-					},
-				},
-				RunResponses: []*command.FakeRun{nRun(3)},
+				Args:       []string{"up"},
+				WantErr:    fmt.Errorf(`strconv.Atoi: parsing "up": invalid syntax`),
+				WantStderr: []string{`strconv.Atoi: parsing "up": invalid syntax`},
 			},
 		},
 		{
