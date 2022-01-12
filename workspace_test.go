@@ -37,7 +37,7 @@ func TestWorkspace(t *testing.T) {
 	lmCmd := []string{
 		"set -e",
 		"set -o pipefail",
-		`xrandr --query | grep "\bconnected" | awk '{print $1}'`,
+		`xrandr --query | grep "\bconnected" | awk '{print $1}' | grep -v ^\s*$`,
 	}
 
 	for _, test := range []struct {
@@ -140,7 +140,7 @@ func TestWorkspace(t *testing.T) {
 				},
 			},
 			etc: &command.ExecuteTestCase{
-				RunResponses: []*command.FakeRun{nRun(4), nRun(2), mcRun("  DP-1\t", "DP-7  ", "  \t ")},
+				RunResponses: []*command.FakeRun{nRun(4), nRun(2), mcRun("  DP-1\t", "DP-7  ")},
 				Args:         []string{"left"},
 				WantExecuteData: &command.ExecuteData{
 					Executable: []string{
@@ -464,6 +464,118 @@ func TestWorkspace(t *testing.T) {
 					" 3: 75",
 					" 8: 222",
 					"24: 68",
+				},
+			},
+		},
+		// Increase brightness
+		{
+			name: "Increase brightness when none set",
+			etc: &command.ExecuteTestCase{
+				RunResponses: []*command.FakeRun{nRun(4), mcRun("eDP-9", "other")},
+				Args:         []string{"brightness", "up"},
+				WantExecuteData: &command.ExecuteData{
+					Executable: []string{
+						"xrandr --output eDP-9 --brightness 1.10",
+						"xrandr --output other --brightness 1.10",
+					},
+				},
+				WantRunContents: [][]string{cw, lmCmd},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						"currentWorkspace": command.IntValue(4),
+						"mcs":              command.StringListValue("eDP-9", "other"),
+					},
+				},
+			},
+			want: &Workspace{
+				Brightness: map[int]int{
+					4: 110,
+				},
+			},
+		},
+		{
+			name: "Increase brightness when already set",
+			w: &Workspace{
+				Brightness: map[int]int{
+					4: 70,
+				},
+			},
+			etc: &command.ExecuteTestCase{
+				RunResponses: []*command.FakeRun{nRun(4), mcRun("eDP-9", "other")},
+				Args:         []string{"brightness", "up"},
+				WantExecuteData: &command.ExecuteData{
+					Executable: []string{
+						"xrandr --output eDP-9 --brightness 0.80",
+						"xrandr --output other --brightness 0.80",
+					},
+				},
+				WantRunContents: [][]string{cw, lmCmd},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						"currentWorkspace": command.IntValue(4),
+						"mcs":              command.StringListValue("eDP-9", "other"),
+					},
+				},
+			},
+			want: &Workspace{
+				Brightness: map[int]int{
+					4: 80,
+				},
+			},
+		},
+		{
+			name: "Decrease brightness when none set",
+			etc: &command.ExecuteTestCase{
+				RunResponses: []*command.FakeRun{nRun(1), mcRun("eDP-9", "other")},
+				Args:         []string{"brightness", "down"},
+				WantExecuteData: &command.ExecuteData{
+					Executable: []string{
+						"xrandr --output eDP-9 --brightness 0.90",
+						"xrandr --output other --brightness 0.90",
+					},
+				},
+				WantRunContents: [][]string{cw, lmCmd},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						"currentWorkspace": command.IntValue(1),
+						"mcs":              command.StringListValue("eDP-9", "other"),
+					},
+				},
+			},
+			want: &Workspace{
+				Brightness: map[int]int{
+					1: 90,
+				},
+			},
+		},
+		{
+			name: "Decrease brightness when already set",
+			w: &Workspace{
+				Brightness: map[int]int{
+					2: 70,
+					4: 111,
+				},
+			},
+			etc: &command.ExecuteTestCase{
+				RunResponses: []*command.FakeRun{nRun(2), mcRun("eDP-9")},
+				Args:         []string{"brightness", "down"},
+				WantExecuteData: &command.ExecuteData{
+					Executable: []string{
+						"xrandr --output eDP-9 --brightness 0.60",
+					},
+				},
+				WantRunContents: [][]string{cw, lmCmd},
+				WantData: &command.Data{
+					Values: map[string]*command.Value{
+						"currentWorkspace": command.IntValue(2),
+						"mcs":              command.StringListValue("eDP-9"),
+					},
+				},
+			},
+			want: &Workspace{
+				Brightness: map[int]int{
+					2: 60,
+					4: 111,
 				},
 			},
 		},

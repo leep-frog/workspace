@@ -19,7 +19,7 @@ var (
 	nArg  = command.BashCommand(command.IntType, "numWorkspaces", []string{"wmctrl -d | wc | awk '{ print $1 }'"})
 	cwArg = command.BashCommand(command.IntType, "currentWorkspace", []string{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`})
 
-	listMcs = command.BashCommand(command.StringListType, "mcs", []string{`xrandr --query | grep "\bconnected" | awk '{print $1}'`})
+	listMcs = command.BashCommand(command.StringListType, "mcs", []string{`xrandr --query | grep "\bconnected" | awk '{print $1}' | grep -v ^\s*$`})
 )
 
 func CLI() *Workspace {
@@ -83,13 +83,17 @@ func (w *Workspace) moveTo(n int, output command.Output, data *command.Data) ([]
 	if err != nil {
 		output.Annotate(err, "Failed to get monitor codes")
 	} else {
-		for _, mc := range mcs.ToStringList() {
-			if trimmed := strings.TrimSpace(mc); trimmed != "" {
-				r = append(r, fmt.Sprintf("xrandr --output %s --brightness %0.2f", trimmed, float64(b)/100.0))
-			}
-		}
+		r = append(r, setBrightness(mcs.ToStringList(), b)...)
 	}
 	return r, nil
+}
+
+func setBrightness(mcs []string, brightness int) []string {
+	var r []string
+	for _, mc := range mcs {
+		r = append(r, fmt.Sprintf("xrandr --output %s --brightness %0.2f", strings.TrimSpace(mc), float64(brightness)/100.0))
+	}
+	return r
 }
 
 func (w *Workspace) nthWorkspace(output command.Output, data *command.Data) ([]string, error) {
@@ -108,12 +112,21 @@ func (w *Workspace) moveRight(output command.Output, data *command.Data) ([]stri
 	return w.moveRelative(1, output, data)
 }
 
-func (w *Workspace) setBrightness(output command.Output, data *command.Data) ([]string, error) {
-	if w.Brightness == nil {
-		w.Brightness = map[int]int{}
+func (w *Workspace) offsetBrightness(offset int) func(o command.Output, d *command.Data) ([]string, error) {
+	return func(o command.Output, d *command.Data) ([]string, error) {
+		cw := cwArg.Get(d).ToInt()
+		b := 100
+		if eb, ok := w.Brightness[cw]; ok {
+			b = eb
+		}
+		b += offset
+		if w.Brightness == nil {
+			w.Brightness = map[int]int{}
+		}
+		w.Brightness[cw] = b
+		w.changed = true
+		return setBrightness(listMcs.Get(d).ToStringList(), b), nil
 	}
-	//w.Brightness[data.Int(workspaceArg)] =
-	return w.moveRelative(1, output, data)
 }
 
 func (w *Workspace) Node() *command.Node {
@@ -137,6 +150,16 @@ func (w *Workspace) Node() *command.Node {
 				),
 			}, nil),
 			"brightness": command.BranchNode(map[string]*command.Node{
+				"up": command.SerialNodes(
+					cwArg,
+					listMcs,
+					command.ExecutableNode(w.offsetBrightness(10)),
+				),
+				"down": command.SerialNodes(
+					cwArg,
+					listMcs,
+					command.ExecutableNode(w.offsetBrightness(-10)),
+				),
 				"set": command.SerialNodes(
 					command.Description("Set the brightness for a workspace"),
 					wn,
