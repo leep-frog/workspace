@@ -75,15 +75,17 @@ func (w *Workspace) moveTo(n int, output command.Output, data *command.Data) ([]
 	r := []string{
 		fmt.Sprintf("wmctrl -s %d", n),
 	}
-	if b, ok := w.Brightness[n]; ok {
-		mcs, err := listMcs.Run(output)
-		if err != nil {
-			output.Annotate(err, "Failed to get monitor codes")
-		} else {
-			for _, mc := range mcs.ToStringList() {
-				if trimmed := strings.TrimSpace(mc); trimmed != "" {
-					r = append(r, fmt.Sprintf("xrandr --output %s --brightness %0.2f", trimmed, float64(b)/100.0))
-				}
+	b, ok := w.Brightness[n]
+	if !ok {
+		b = 100
+	}
+	mcs, err := listMcs.Run(output)
+	if err != nil {
+		output.Annotate(err, "Failed to get monitor codes")
+	} else {
+		for _, mc := range mcs.ToStringList() {
+			if trimmed := strings.TrimSpace(mc); trimmed != "" {
+				r = append(r, fmt.Sprintf("xrandr --output %s --brightness %0.2f", trimmed, float64(b)/100.0))
 			}
 		}
 	}

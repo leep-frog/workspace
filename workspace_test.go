@@ -89,14 +89,15 @@ func TestWorkspace(t *testing.T) {
 		{
 			name: "moves left",
 			etc: &command.ExecuteTestCase{
-				RunResponses: []*command.FakeRun{nRun(4), nRun(2)},
+				RunResponses: []*command.FakeRun{nRun(4), nRun(2), mcRun("DP-1")},
 				Args:         []string{"left"},
 				WantExecuteData: &command.ExecuteData{
 					Executable: []string{
 						"wmctrl -s 1",
+						"xrandr --output DP-1 --brightness 1.00",
 					},
 				},
-				WantRunContents: [][]string{numW, cw},
+				WantRunContents: [][]string{numW, cw, lmCmd},
 				WantData: &command.Data{
 					Values: map[string]*command.Value{
 						"numWorkspaces":    command.IntValue(4),
@@ -111,14 +112,15 @@ func TestWorkspace(t *testing.T) {
 		{
 			name: "moves left from 0 to top",
 			etc: &command.ExecuteTestCase{
-				RunResponses: []*command.FakeRun{nRun(4), nRun(0)},
+				RunResponses: []*command.FakeRun{nRun(4), nRun(0), mcRun("DP-2")},
 				Args:         []string{"left"},
 				WantExecuteData: &command.ExecuteData{
 					Executable: []string{
 						"wmctrl -s 3",
+						"xrandr --output DP-2 --brightness 1.00",
 					},
 				},
-				WantRunContents: [][]string{numW, cw},
+				WantRunContents: [][]string{numW, cw, lmCmd},
 				WantData: &command.Data{
 					Values: map[string]*command.Value{
 						"numWorkspaces":    command.IntValue(4),
@@ -165,14 +167,15 @@ func TestWorkspace(t *testing.T) {
 		{
 			name: "moves right",
 			etc: &command.ExecuteTestCase{
-				RunResponses: []*command.FakeRun{nRun(4), nRun(1)},
+				RunResponses: []*command.FakeRun{nRun(4), nRun(1), mcRun("eDP-9")},
 				Args:         []string{"right"},
 				WantExecuteData: &command.ExecuteData{
 					Executable: []string{
 						"wmctrl -s 2",
+						"xrandr --output eDP-9 --brightness 1.00",
 					},
 				},
-				WantRunContents: [][]string{numW, cw},
+				WantRunContents: [][]string{numW, cw, lmCmd},
 				WantData: &command.Data{
 					Values: map[string]*command.Value{
 						"numWorkspaces":    command.IntValue(4),
@@ -187,14 +190,18 @@ func TestWorkspace(t *testing.T) {
 		{
 			name: "moves right from last workspace",
 			etc: &command.ExecuteTestCase{
-				RunResponses: []*command.FakeRun{nRun(4), nRun(3)},
+				RunResponses: []*command.FakeRun{nRun(4), nRun(3), mcRun("dp1", "dp2", "dp3", "dp4")},
 				Args:         []string{"right"},
 				WantExecuteData: &command.ExecuteData{
 					Executable: []string{
 						"wmctrl -s 0",
+						"xrandr --output dp1 --brightness 1.00",
+						"xrandr --output dp2 --brightness 1.00",
+						"xrandr --output dp3 --brightness 1.00",
+						"xrandr --output dp4 --brightness 1.00",
 					},
 				},
-				WantRunContents: [][]string{numW, cw},
+				WantRunContents: [][]string{numW, cw, lmCmd},
 				WantData: &command.Data{
 					Values: map[string]*command.Value{
 						"numWorkspaces":    command.IntValue(4),
@@ -241,7 +248,7 @@ func TestWorkspace(t *testing.T) {
 		{
 			name: "moves to nth workspace",
 			etc: &command.ExecuteTestCase{
-				RunResponses: []*command.FakeRun{nRun(5)},
+				RunResponses: []*command.FakeRun{nRun(5), mcRun()},
 				Args:         []string{"3"},
 				WantData: &command.Data{
 					Values: map[string]*command.Value{
@@ -254,7 +261,7 @@ func TestWorkspace(t *testing.T) {
 						"wmctrl -s 3",
 					},
 				},
-				WantRunContents: [][]string{cw},
+				WantRunContents: [][]string{cw, lmCmd},
 			},
 			want: &Workspace{
 				Prev: 5,
@@ -312,14 +319,15 @@ func TestWorkspace(t *testing.T) {
 				Prev: 3,
 			},
 			etc: &command.ExecuteTestCase{
-				RunResponses: []*command.FakeRun{nRun(5)},
+				RunResponses: []*command.FakeRun{nRun(5), mcRun("dp0")},
 				Args:         []string{"back"},
 				WantExecuteData: &command.ExecuteData{
 					Executable: []string{
 						"wmctrl -s 3",
+						"xrandr --output dp0 --brightness 1.00",
 					},
 				},
-				WantRunContents: [][]string{cw},
+				WantRunContents: [][]string{cw, lmCmd},
 				WantData: &command.Data{
 					Values: map[string]*command.Value{
 						"currentWorkspace": command.IntValue(5),
