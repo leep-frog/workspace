@@ -101,6 +101,5 @@ func (w *Workspace) Node() *command.Node {
 			command.IntNode(workspaceArg, "Workspace number", command.IntNonNegative()),
 			command.ExecutableNode(w.nthWorkspace),
 		),
-		true,
 	)
 }
