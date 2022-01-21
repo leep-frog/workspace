@@ -79,8 +79,8 @@ func TestWorkspace(t *testing.T) {
 				WantStderr:      []string{"failed to execute bash command: unknown workspace"},
 				WantRunContents: [][]string{numW, cw},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						"numWorkspaces": command.IntValue(1),
+					Values: map[string]interface{}{
+						"numWorkspaces": 1,
 					},
 				},
 				RunResponses: []*command.FakeRun{nRun(1), errRun("unknown workspace")},
@@ -99,9 +99,9 @@ func TestWorkspace(t *testing.T) {
 				},
 				WantRunContents: [][]string{numW, cw, lmCmd},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						"numWorkspaces":    command.IntValue(4),
-						"currentWorkspace": command.IntValue(2),
+					Values: map[string]interface{}{
+						"numWorkspaces":    4,
+						"currentWorkspace": 2,
 					},
 				},
 			},
@@ -122,9 +122,9 @@ func TestWorkspace(t *testing.T) {
 				},
 				WantRunContents: [][]string{numW, cw, lmCmd},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						"numWorkspaces":    command.IntValue(4),
-						"currentWorkspace": command.IntValue(0),
+					Values: map[string]interface{}{
+						"numWorkspaces":    4,
+						"currentWorkspace": 0,
 					},
 				},
 			},
@@ -151,9 +151,9 @@ func TestWorkspace(t *testing.T) {
 				},
 				WantRunContents: [][]string{numW, cw, lmCmd},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						"numWorkspaces":    command.IntValue(4),
-						"currentWorkspace": command.IntValue(2),
+					Values: map[string]interface{}{
+						"numWorkspaces":    4,
+						"currentWorkspace": 2,
 					},
 				},
 			},
@@ -177,9 +177,9 @@ func TestWorkspace(t *testing.T) {
 				},
 				WantRunContents: [][]string{numW, cw, lmCmd},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						"numWorkspaces":    command.IntValue(4),
-						"currentWorkspace": command.IntValue(1),
+					Values: map[string]interface{}{
+						"numWorkspaces":    4,
+						"currentWorkspace": 1,
 					},
 				},
 			},
@@ -203,9 +203,9 @@ func TestWorkspace(t *testing.T) {
 				},
 				WantRunContents: [][]string{numW, cw, lmCmd},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						"numWorkspaces":    command.IntValue(4),
-						"currentWorkspace": command.IntValue(3),
+					Values: map[string]interface{}{
+						"numWorkspaces":    4,
+						"currentWorkspace": 3,
 					},
 				},
 			},
@@ -232,9 +232,9 @@ func TestWorkspace(t *testing.T) {
 				},
 				WantRunContents: [][]string{numW, cw, lmCmd},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						"numWorkspaces":    command.IntValue(4),
-						"currentWorkspace": command.IntValue(3),
+					Values: map[string]interface{}{
+						"numWorkspaces":    4,
+						"currentWorkspace": 3,
 					},
 				},
 			},
@@ -251,9 +251,9 @@ func TestWorkspace(t *testing.T) {
 				RunResponses: []*command.FakeRun{nRun(5), mcRun()},
 				Args:         []string{"3"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						workspaceArg:       command.IntValue(3),
-						"currentWorkspace": command.IntValue(5),
+					Values: map[string]interface{}{
+						workspaceArg:       3,
+						"currentWorkspace": 5,
 					},
 				},
 				WantExecuteData: &command.ExecuteData{
@@ -278,9 +278,9 @@ func TestWorkspace(t *testing.T) {
 				RunResponses: []*command.FakeRun{nRun(5), mcRun("DP-2", "DP-5")},
 				Args:         []string{"3"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						workspaceArg:       command.IntValue(3),
-						"currentWorkspace": command.IntValue(5),
+					Values: map[string]interface{}{
+						workspaceArg:       3,
+						"currentWorkspace": 5,
 					},
 				},
 				WantExecuteData: &command.ExecuteData{
@@ -305,9 +305,9 @@ func TestWorkspace(t *testing.T) {
 				RunResponses: []*command.FakeRun{nRun(2)},
 				Args:         []string{"2"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						workspaceArg:       command.IntValue(2),
-						"currentWorkspace": command.IntValue(2),
+					Values: map[string]interface{}{
+						workspaceArg:       2,
+						"currentWorkspace": 2,
 					},
 				},
 				WantRunContents: [][]string{cw},
@@ -329,8 +329,8 @@ func TestWorkspace(t *testing.T) {
 				},
 				WantRunContents: [][]string{cw, lmCmd},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						"currentWorkspace": command.IntValue(5),
+					Values: map[string]interface{}{
+						"currentWorkspace": 5,
 					},
 				},
 			},
@@ -357,8 +357,8 @@ func TestWorkspace(t *testing.T) {
 				},
 				WantRunContents: [][]string{cw, lmCmd},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						"currentWorkspace": command.IntValue(5),
+					Values: map[string]interface{}{
+						"currentWorkspace": 5,
 					},
 				},
 			},
@@ -378,8 +378,8 @@ func TestWorkspace(t *testing.T) {
 				WantRunContents: [][]string{lmCmd},
 				WantStdout:      []string{"DP-1-3", "eDP-1"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						"mcs": command.StringListValue("DP-1-3", "eDP-1"),
+					Values: map[string]interface{}{
+						"mcs": []string{"DP-1-3", "eDP-1"},
 					},
 				},
 			},
@@ -390,9 +390,9 @@ func TestWorkspace(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"brightness", "set", "3", "75"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						workspaceArg:  command.IntValue(3),
-						brightnessArg: command.IntValue(75),
+					Values: map[string]interface{}{
+						workspaceArg:  3,
+						brightnessArg: 75,
 					},
 				},
 			},
@@ -412,9 +412,9 @@ func TestWorkspace(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"brightness", "set", "8", "222"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						workspaceArg:  command.IntValue(8),
-						brightnessArg: command.IntValue(222),
+					Values: map[string]interface{}{
+						workspaceArg:  8,
+						brightnessArg: 222,
 					},
 				},
 			},
@@ -436,9 +436,9 @@ func TestWorkspace(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args: []string{"brightness", "set", "8", "90"},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						workspaceArg:  command.IntValue(8),
-						brightnessArg: command.IntValue(90),
+					Values: map[string]interface{}{
+						workspaceArg:  8,
+						brightnessArg: 90,
 					},
 				},
 			},
@@ -481,9 +481,9 @@ func TestWorkspace(t *testing.T) {
 				},
 				WantRunContents: [][]string{cw, lmCmd},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						"currentWorkspace": command.IntValue(4),
-						"mcs":              command.StringListValue("eDP-9", "other"),
+					Values: map[string]interface{}{
+						"currentWorkspace": 4,
+						"mcs":              []string{"eDP-9", "other"},
 					},
 				},
 			},
@@ -511,9 +511,9 @@ func TestWorkspace(t *testing.T) {
 				},
 				WantRunContents: [][]string{cw, lmCmd},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						"currentWorkspace": command.IntValue(4),
-						"mcs":              command.StringListValue("eDP-9", "other"),
+					Values: map[string]interface{}{
+						"currentWorkspace": 4,
+						"mcs":              []string{"eDP-9", "other"},
 					},
 				},
 			},
@@ -536,9 +536,9 @@ func TestWorkspace(t *testing.T) {
 				},
 				WantRunContents: [][]string{cw, lmCmd},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						"currentWorkspace": command.IntValue(1),
-						"mcs":              command.StringListValue("eDP-9", "other"),
+					Values: map[string]interface{}{
+						"currentWorkspace": 1,
+						"mcs":              []string{"eDP-9", "other"},
 					},
 				},
 			},
@@ -566,9 +566,9 @@ func TestWorkspace(t *testing.T) {
 				},
 				WantRunContents: [][]string{cw, lmCmd},
 				WantData: &command.Data{
-					Values: map[string]*command.Value{
-						"currentWorkspace": command.IntValue(2),
-						"mcs":              command.StringListValue("eDP-9"),
+					Values: map[string]interface{}{
+						"currentWorkspace": 2,
+						"mcs":              []string{"eDP-9"},
 					},
 				},
 			},
