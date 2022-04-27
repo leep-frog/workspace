@@ -1,7 +1,6 @@
 package workspace
 
 import (
-	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -30,13 +29,6 @@ type Workspace struct {
 	Prev       int
 	Brightness map[int]int
 	changed    bool
-}
-
-func (w *Workspace) Load(jsn string) error {
-	if err := json.Unmarshal([]byte(jsn), w); err != nil {
-		return fmt.Errorf("failed to unmarshal json for workspace object: %v", err)
-	}
-	return nil
 }
 
 func (*Workspace) Name() string {
