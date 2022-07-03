@@ -47,7 +47,7 @@ func (w *Workspace) moveRelative(offset int, output command.Output, data *comman
 	n := nArg.Get(data)
 	c := cwArg.Get(data)
 	if n <= 0 {
-		return nil, output.Stderr("couldn't get number of workspaces")
+		return nil, output.Stderrln("couldn't get number of workspaces")
 	}
 	var newWS int
 	for newWS = c + offset; newWS < 0; newWS += n {
@@ -173,7 +173,7 @@ func (w *Workspace) Node() *command.Node {
 						}
 						sort.Ints(keys)
 						for _, k := range keys {
-							o.Stdoutf("%2d: %d", k, w.Brightness[k])
+							o.Stdoutf("%2d: %d\n", k, w.Brightness[k])
 						}
 					}),
 				),

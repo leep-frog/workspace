@@ -2,6 +2,7 @@ package workspace
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -50,7 +51,7 @@ func TestWorkspace(t *testing.T) {
 			name: "requires argument",
 			etc: &command.ExecuteTestCase{
 				WantErr:    fmt.Errorf(`Argument "WORKSPACE" requires at least 1 argument, got 0`),
-				WantStderr: []string{`Argument "WORKSPACE" requires at least 1 argument, got 0`},
+				WantStderr: "Argument \"WORKSPACE\" requires at least 1 argument, got 0\n",
 			},
 		},
 		{
@@ -58,7 +59,7 @@ func TestWorkspace(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args:       []string{"up"},
 				WantErr:    fmt.Errorf(`strconv.Atoi: parsing "up": invalid syntax`),
-				WantStderr: []string{`strconv.Atoi: parsing "up": invalid syntax`},
+				WantStderr: "strconv.Atoi: parsing \"up\": invalid syntax\n",
 			},
 		},
 		{
@@ -67,7 +68,7 @@ func TestWorkspace(t *testing.T) {
 				RunResponses:    []*command.FakeRun{errRun("unlimited workspaces")},
 				Args:            []string{"left"},
 				WantErr:         fmt.Errorf("failed to execute bash command: unlimited workspaces"),
-				WantStderr:      []string{"failed to execute bash command: unlimited workspaces"},
+				WantStderr:      "failed to execute bash command: unlimited workspaces\n",
 				WantRunContents: [][]string{numW},
 			},
 		},
@@ -76,7 +77,7 @@ func TestWorkspace(t *testing.T) {
 			etc: &command.ExecuteTestCase{
 				Args:            []string{"left"},
 				WantErr:         fmt.Errorf("failed to execute bash command: unknown workspace"),
-				WantStderr:      []string{"failed to execute bash command: unknown workspace"},
+				WantStderr:      "failed to execute bash command: unknown workspace\n",
 				WantRunContents: [][]string{numW, cw},
 				WantData: &command.Data{
 					Values: map[string]interface{}{
@@ -376,7 +377,11 @@ func TestWorkspace(t *testing.T) {
 				RunResponses:    []*command.FakeRun{mcRun("eDP-1", "DP-1-3")},
 				Args:            []string{"monitors", "list"},
 				WantRunContents: [][]string{lmCmd},
-				WantStdout:      []string{"DP-1-3", "eDP-1"},
+				WantStdout: strings.Join([]string{
+					"DP-1-3",
+					"eDP-1",
+					"",
+				}, "\n"),
 				WantData: &command.Data{
 					Values: map[string]interface{}{
 						"mcs": []string{"DP-1-3", "eDP-1"},
@@ -460,11 +465,12 @@ func TestWorkspace(t *testing.T) {
 			},
 			etc: &command.ExecuteTestCase{
 				Args: []string{"brightness", "list"},
-				WantStdout: []string{
+				WantStdout: strings.Join([]string{
 					" 3: 75",
 					" 8: 222",
 					"24: 68",
-				},
+					"",
+				}, "\n"),
 			},
 		},
 		// Increase brightness
