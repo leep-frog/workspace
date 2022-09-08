@@ -71,7 +71,7 @@ func (w *Workspace) moveTo(n int, output command.Output, data *command.Data) ([]
 	if !ok {
 		b = 100
 	}
-	mcs, err := listMcs.Run(output)
+	mcs, err := listMcs.Run(output, data)
 	if err != nil {
 		output.Annotate(err, "Failed to get monitor codes")
 	} else {
