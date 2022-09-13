@@ -123,67 +123,74 @@ func (w *Workspace) offsetBrightness(offset int) func(o command.Output, d *comma
 
 func (w *Workspace) Node() *command.Node {
 	wn := command.Arg[int](workspaceArg, "Workspace number", command.NonNegative[int]())
-	return command.BranchNode(
-		map[string]*command.Node{
+	return command.AsNode(&command.BranchNode{
+		Branches: map[string]*command.Node{
 			"left":  command.SerialNodes(command.Description("Move one workspace left"), nArg, cwArg, command.ExecutableNode(w.moveLeft)),
 			"right": command.SerialNodes(command.Description("Move one workspace right"), nArg, cwArg, command.ExecutableNode(w.moveRight)),
 			"back":  command.SerialNodes(command.Description("Move to the previous"), cwArg, command.ExecutableNode(w.moveBack)),
-			"monitors": command.BranchNode(map[string]*command.Node{
-				"list": command.SerialNodes(
-					command.Description("List monitor codes"),
-					listMcs,
-					command.ExecutorNode(func(o command.Output, d *command.Data) {
-						codes := d.StringList("mcs")
-						sort.Strings(codes)
-						for _, c := range codes {
-							o.Stdoutln(c)
-						}
-					}),
-				),
-			}, nil),
-			"brightness": command.BranchNode(map[string]*command.Node{
-				"up": command.SerialNodes(
-					cwArg,
-					listMcs,
-					command.ExecutableNode(w.offsetBrightness(10)),
-				),
-				"down": command.SerialNodes(
-					cwArg,
-					listMcs,
-					command.ExecutableNode(w.offsetBrightness(-10)),
-				),
-				"set": command.SerialNodes(
-					command.Description("Set the brightness for a workspace"),
-					wn,
-					command.Arg[int](brightnessArg, "Monitor brightness", command.GTE[int](5), command.LTE[int](250)),
-					command.ExecutorNode(func(o command.Output, d *command.Data) {
-						if w.Brightness == nil {
-							w.Brightness = map[int]int{}
-						}
-						w.Brightness[d.Int(workspaceArg)] = d.Int(brightnessArg)
-						w.changed = true
-					}),
-				),
-				"list": command.SerialNodes(
-					command.Description("List brightnesses for each workspace"),
-					command.ExecutorNode(func(o command.Output, d *command.Data) {
-						var keys []int
-						for k := range w.Brightness {
-							keys = append(keys, k)
-						}
-						sort.Ints(keys)
-						for _, k := range keys {
-							o.Stdoutf("%2d: %d\n", k, w.Brightness[k])
-						}
-					}),
-				),
-			}, nil),
+			"monitors": command.AsNode(&command.BranchNode{
+				Branches: map[string]*command.Node{
+					"list": command.SerialNodes(
+						command.Description("List monitor codes"),
+						listMcs,
+						&command.ExecutorProcessor{F: func(o command.Output, d *command.Data) error {
+							codes := d.StringList("mcs")
+							sort.Strings(codes)
+							for _, c := range codes {
+								o.Stdoutln(c)
+							}
+							return nil
+						}},
+					),
+				},
+			}),
+			"brightness": command.AsNode(&command.BranchNode{
+				Branches: map[string]*command.Node{
+					"up": command.SerialNodes(
+						cwArg,
+						listMcs,
+						command.ExecutableNode(w.offsetBrightness(10)),
+					),
+					"down": command.SerialNodes(
+						cwArg,
+						listMcs,
+						command.ExecutableNode(w.offsetBrightness(-10)),
+					),
+					"set": command.SerialNodes(
+						command.Description("Set the brightness for a workspace"),
+						wn,
+						command.Arg[int](brightnessArg, "Monitor brightness", command.GTE[int](5), command.LTE[int](250)),
+						&command.ExecutorProcessor{F: func(o command.Output, d *command.Data) error {
+							if w.Brightness == nil {
+								w.Brightness = map[int]int{}
+							}
+							w.Brightness[d.Int(workspaceArg)] = d.Int(brightnessArg)
+							w.changed = true
+							return nil
+						}},
+					),
+					"list": command.SerialNodes(
+						command.Description("List brightnesses for each workspace"),
+						&command.ExecutorProcessor{F: func(o command.Output, d *command.Data) error {
+							var keys []int
+							for k := range w.Brightness {
+								keys = append(keys, k)
+							}
+							sort.Ints(keys)
+							for _, k := range keys {
+								o.Stdoutf("%2d: %d\n", k, w.Brightness[k])
+							}
+							return nil
+						}},
+					),
+				},
+			}),
 		},
-		command.SerialNodes(
+		Default: command.SerialNodes(
 			command.Description("Move to a specific workspace"),
 			wn,
 			cwArg,
 			command.ExecutableNode(w.nthWorkspace),
 		),
-	)
+	})
 }

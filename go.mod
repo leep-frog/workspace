@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/google/go-cmp v0.5.5
-	github.com/leep-frog/command v0.0.0-20220908170245-84c655f5a5ed
+	github.com/leep-frog/command v0.0.0-20220913175955-ecdd7a1059e5
 )
 
 require (
