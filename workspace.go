@@ -15,10 +15,19 @@ const (
 )
 
 var (
-	nArg  = command.NewBashCommand[int]("numWorkspaces", []string{"wmctrl -d | wc | awk '{ print $1 }'"})
-	cwArg = command.NewBashCommand[int]("currentWorkspace", []string{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`})
+	nArg = &command.BashCommand[int]{
+		ArgName:  "numWorkspaces",
+		Contents: []string{"wmctrl -d | wc | awk '{ print $1 }'"},
+	}
+	cwArg = &command.BashCommand[int]{
+		ArgName:  "currentWorkspace",
+		Contents: []string{`wmctrl -d | awk '{ if ($2 == "'*'") print $1 }'`},
+	}
 
-	listMcs = command.NewBashCommand[[]string]("mcs", []string{`xrandr --query | grep "\bconnected" | awk '{print $1}' | grep -v ^\s*$`})
+	listMcs = &command.BashCommand[[]string]{
+		ArgName:  "mcs",
+		Contents: []string{`xrandr --query | grep "\bconnected" | awk '{print $1}' | grep -v ^\s*$`},
+	}
 )
 
 func CLI() *Workspace {
