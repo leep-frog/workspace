@@ -130,15 +130,15 @@ func (w *Workspace) offsetBrightness(offset int) func(o command.Output, d *comma
 	}
 }
 
-func (w *Workspace) Node() *command.Node {
+func (w *Workspace) Node() command.Node {
 	wn := command.Arg[int](workspaceArg, "Workspace number", command.NonNegative[int]())
-	return command.AsNode(&command.BranchNode{
-		Branches: map[string]*command.Node{
+	return &command.BranchNode{
+		Branches: map[string]command.Node{
 			"left":  command.SerialNodes(command.Description("Move one workspace left"), nArg, cwArg, command.ExecutableNode(w.moveLeft)),
 			"right": command.SerialNodes(command.Description("Move one workspace right"), nArg, cwArg, command.ExecutableNode(w.moveRight)),
 			"back":  command.SerialNodes(command.Description("Move to the previous"), cwArg, command.ExecutableNode(w.moveBack)),
-			"monitors": command.AsNode(&command.BranchNode{
-				Branches: map[string]*command.Node{
+			"monitors": &command.BranchNode{
+				Branches: map[string]command.Node{
 					"list": command.SerialNodes(
 						command.Description("List monitor codes"),
 						listMcs,
@@ -152,9 +152,9 @@ func (w *Workspace) Node() *command.Node {
 						}},
 					),
 				},
-			}),
-			"brightness": command.AsNode(&command.BranchNode{
-				Branches: map[string]*command.Node{
+			},
+			"brightness": &command.BranchNode{
+				Branches: map[string]command.Node{
 					"up": command.SerialNodes(
 						cwArg,
 						listMcs,
@@ -168,7 +168,7 @@ func (w *Workspace) Node() *command.Node {
 					"set": command.SerialNodes(
 						command.Description("Set the brightness for a workspace"),
 						wn,
-						command.Arg[int](brightnessArg, "Monitor brightness", command.GTE[int](5), command.LTE[int](250)),
+						command.Arg[int](brightnessArg, "Monitor brightness", command.GTE(5), command.LTE(250)),
 						&command.ExecutorProcessor{F: func(o command.Output, d *command.Data) error {
 							if w.Brightness == nil {
 								w.Brightness = map[int]int{}
@@ -193,7 +193,7 @@ func (w *Workspace) Node() *command.Node {
 						}},
 					),
 				},
-			}),
+			},
 		},
 		Default: command.SerialNodes(
 			command.Description("Move to a specific workspace"),
@@ -201,5 +201,5 @@ func (w *Workspace) Node() *command.Node {
 			cwArg,
 			command.ExecutableNode(w.nthWorkspace),
 		),
-	})
+	}
 }
