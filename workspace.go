@@ -134,9 +134,9 @@ func (w *Workspace) Node() command.Node {
 	wn := command.Arg[int](workspaceArg, "Workspace number", command.NonNegative[int]())
 	return &command.BranchNode{
 		Branches: map[string]command.Node{
-			"left":  command.SerialNodes(command.Description("Move one workspace left"), nArg, cwArg, command.ExecutableNode(w.moveLeft)),
-			"right": command.SerialNodes(command.Description("Move one workspace right"), nArg, cwArg, command.ExecutableNode(w.moveRight)),
-			"back":  command.SerialNodes(command.Description("Move to the previous"), cwArg, command.ExecutableNode(w.moveBack)),
+			"left":  command.SerialNodes(command.Description("Move one workspace left"), nArg, cwArg, command.ExecutableProcessor(w.moveLeft)),
+			"right": command.SerialNodes(command.Description("Move one workspace right"), nArg, cwArg, command.ExecutableProcessor(w.moveRight)),
+			"back":  command.SerialNodes(command.Description("Move to the previous"), cwArg, command.ExecutableProcessor(w.moveBack)),
 			"monitors": &command.BranchNode{
 				Branches: map[string]command.Node{
 					"list": command.SerialNodes(
@@ -158,12 +158,12 @@ func (w *Workspace) Node() command.Node {
 					"up": command.SerialNodes(
 						cwArg,
 						listMcs,
-						command.ExecutableNode(w.offsetBrightness(10)),
+						command.ExecutableProcessor(w.offsetBrightness(10)),
 					),
 					"down": command.SerialNodes(
 						cwArg,
 						listMcs,
-						command.ExecutableNode(w.offsetBrightness(-10)),
+						command.ExecutableProcessor(w.offsetBrightness(-10)),
 					),
 					"set": command.SerialNodes(
 						command.Description("Set the brightness for a workspace"),
@@ -199,7 +199,7 @@ func (w *Workspace) Node() command.Node {
 			command.Description("Move to a specific workspace"),
 			wn,
 			cwArg,
-			command.ExecutableNode(w.nthWorkspace),
+			command.ExecutableProcessor(w.nthWorkspace),
 		),
 	}
 }
