@@ -8,5 +8,5 @@ import (
 )
 
 func main() {
-	os.Exit(sourcerer.Source(workspace.CLI()))
+	os.Exit(sourcerer.Source([]sourcerer.CLI{workspace.CLI()}))
 }
